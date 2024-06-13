@@ -13,11 +13,7 @@
                 <div class="card-footer">
                     <small class="text-muted">Автор: {{ item.user.name }}</small><br>
                     <small class="text-muted">Дата написания: {{ item.created_date.strftime('%d.%m.%Y') }}</small><br>
-                    <small class="text-muted">Категории: 
-                        {% for category in item.categories %}
-                            {{ category.name }}{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    </small>
+                    <small class="text-muted">Категория: {{ item.category.name }}</small>
                 </div>
             </div>
         </div>

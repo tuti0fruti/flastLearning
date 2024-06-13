@@ -1,4 +1,3 @@
-import datetime
 from flask import Flask, abort, make_response, redirect, render_template, request, session, url_for
 from data import db_session
 from data.category import Category
@@ -85,123 +84,6 @@ def login():
             return render_template('login.html', error=error)
 
     return render_template('login.html', form=form)
-    
-# @app.route('/news', methods=['GET', 'POST'])
-# @login_required
-# def add_news():
-#     form = NewsForm()
-#     if form.validate_on_submit():
-#         db_sess = db_session.create_session()
-#         news = News()
-
-#         news.title = form.title.data
-#         news.content = form.content.data
-#         news.is_private = form.is_private.data
-#         current_user.news.append(news)
-
-#         db_sess.merge(current_user)
-#         db_sess.commit()
-        
-#         return redirect('/')
-#     return render_template('news.html', title='Добавление новости',form=form)
-
-
-# @app.route('/news/<int:id>', methods=['GET', 'POST'])
-# @login_required
-# def edit_news(id):
-#     form = NewsForm()
-#     if request.method == "GET":
-#         db_sess = db_session.create_session()
-#         news = db_sess.query(News).filter(News.id == id,News.user == current_user).first()
-        
-#         if news:
-#             form.title.data = news.title
-#             form.content.data = news.content
-#             form.is_private.data = news.is_private
-#         else:
-#             abort(404)
-#     if form.validate_on_submit():
-#         db_sess = db_session.create_session()
-#         news = db_sess.query(News).filter(News.id == id, News.user == current_user).first()
-#         if news:
-#             news.title = form.title.data
-#             news.content = form.content.data
-#             news.is_private = form.is_private.data
-#             db_sess.commit()
-#             return redirect('/')
-#         else:
-#             abort(404)
-#     return render_template('news.html', title='Редактирование новости', form=form)
-
-# @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
-# @login_required
-# def news_delete(id):
-#     db_sess = db_session.create_session()
-#     news = db_sess.query(News).filter(News.id == id,News.user == current_user).first()
-#     if news:
-#         db_sess.delete(news)
-#         db_sess.commit()
-#     else:
-#         abort(404)
-#     return redirect('/')
-
-@app.route('/news', methods=['GET', 'POST'])
-@login_required
-def add_news():
-    form = NewsForm()
-    if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        news = News(
-            title=form.title.data,
-            content=form.content.data,
-            is_private=form.is_private.data,
-            user_id=current_user.id,
-            categories=[db_sess.query(Category).get(id) for id in form.categories.data]
-        )
-        db_sess.add(news)
-        db_sess.commit()
-        return redirect('/')
-    return render_template('news.html', title='Добавление новости', form=form)
-
-@app.route('/news/<int:id>', methods=['GET', 'POST'])
-@login_required
-def edit_news(id):
-    form = NewsForm()
-    if request.method == "GET":
-        db_sess = db_session.create_session()
-        news = db_sess.query(News).filter(News.id == id, News.user_id == current_user.id).first()
-        if news:
-            form.title.data = news.title
-            form.content.data = news.content
-            form.is_private.data = news.is_private
-            form.categories.data = [category.id for category in news.categories]
-        else:
-            abort(404)
-    if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        news = db_sess.query(News).filter(News.id == id, News.user_id == current_user.id).first()
-        if news:
-            news.title = form.title.data
-            news.content = form.content.data
-            news.is_private = form.is_private.data
-            news.categories = [db_sess.query(Category).get(id) for id in form.categories.data]
-            db_sess.commit()
-            return redirect('/')
-        else:
-            abort(404)
-    return render_template('news.html', title='Редактирование новости', form=form)
-
-@app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
-@login_required
-def news_delete(id):
-    db_sess = db_session.create_session()
-    news = db_sess.query(News).filter(News.id == id, News.user_id == current_user.id).first()
-    if news:
-        db_sess.delete(news)
-        db_sess.commit()
-    else:
-        abort(404)
-    return redirect('/')
 
 @app.route("/cookie_test")
 def cookie_test():
@@ -223,6 +105,64 @@ def session_test():
     session['visits_count'] = visits_count + 1
     return make_response(f"Вы пришли на эту страницу {visits_count + 1} раз")
 
+@app.route('/news', methods=['GET', 'POST'])
+@login_required
+def add_news():
+    form = NewsForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        news = News(
+            title=form.title.data,
+            content=form.content.data,
+            is_private=form.is_private.data,
+            user_id=current_user.id,
+            category_id=form.category.data
+        )
+        db_sess.add(news)
+        db_sess.commit()
+        return redirect('/')
+    return render_template('news.html', title='Добавление новости', form=form)
+
+@app.route('/news/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_news(id):
+    form = NewsForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        news = db_sess.query(News).filter(News.id == id, News.user_id == current_user.id).first()
+        if news:
+            form.title.data = news.title
+            form.content.data = news.content
+            form.is_private.data = news.is_private
+            form.category.data = news.category_id
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        news = db_sess.query(News).filter(News.id == id, News.user_id == current_user.id).first()
+        if news:
+            news.title = form.title.data
+            news.content = form.content.data
+            news.is_private = form.is_private.data
+            news.category_id = form.category.data
+            db_sess.commit()
+            return redirect('/')
+        else:
+            abort(404)
+    return render_template('news.html', title='Редактирование новости', form=form)
+
+@app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def news_delete(id):
+    db_sess = db_session.create_session()
+    news = db_sess.query(News).filter(News.id == id, News.user_id == current_user.id).first()
+    if news:
+        db_sess.delete(news)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
+
 @app.route('/add_category', methods=['GET', 'POST'])
 @login_required
 def add_category():
@@ -234,6 +174,7 @@ def add_category():
         db_sess.commit()
         return redirect('/')
     return render_template('category.html', title='Добавление категории', form=form)
+
 
 def main():
     db_sess = db_session.create_session()
