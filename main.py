@@ -26,11 +26,14 @@ def index():
     db_sess = db_session.create_session()
     
     if current_user.is_authenticated:
-        news = db_sess.query(News).filter((News.user == current_user) | (News.is_private != True))
+        news = db_sess.query(News).filter((News.user == current_user) | (News.is_private != True)).all()
+        categories = db_sess.query(Category).all()
     else:
-        news = db_sess.query(News).filter(News.is_private != True)
+        news = db_sess.query(News).filter(News.is_private != True).all()
+        categories = []
 
-    return render_template("index.html", news=news)
+    return render_template("index.html", news=news, categories=categories)
+
 
 @app.route('/logout')
 @login_required
@@ -79,9 +82,8 @@ def login():
             # Успешная аутентификация
             return redirect('/') # Перенаправление на страницу после входа
         else:
-            # Неправильный логин или пароль
-            error = 'Invalid username or password'
-            return render_template('login.html', error=error)
+            
+            return redirect('/login')
 
     return render_template('login.html', form=form)
 
@@ -174,6 +176,51 @@ def add_category():
         db_sess.commit()
         return redirect('/')
     return render_template('category.html', title='Добавление категории', form=form)
+
+
+
+@app.route('/categories')
+@login_required
+def show_categories():
+    db_sess = db_session.create_session()
+    categories = db_sess.query(Category).all()
+    return render_template('categories.html', categories=categories)
+
+@app.route('/category_delete/<int:id>', methods=['POST'])
+@login_required
+def category_delete(id):
+    db_sess = db_session.create_session()
+    category = db_sess.query(Category).filter(Category.id == id).first()
+    if category:
+        db_sess.delete(category)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
+
+@app.route('/edit_category/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_category(id):
+    form = CategoryForm()
+    db_sess = db_session.create_session()
+    category = db_sess.query(Category).filter(Category.id == id).first()
+    
+    if request.method == "GET":
+        if category:
+            form.name.data = category.name
+        else:
+            abort(404)
+
+    if form.validate_on_submit():
+        if category:
+            category.name = form.name.data
+            db_sess.commit()
+            return redirect('/')
+        else:
+            abort(404)
+    
+    return render_template('edit_category.html', title='Редактирование категории', form=form, category=category)
+
 
 
 def main():
