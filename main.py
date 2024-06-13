@@ -39,6 +39,26 @@ def logout():
     logout_user()
     return redirect("/")
 
+@app.route("/cookie_test")
+def cookie_test():
+    db_sess = db_session.create_session()
+    news = db_sess.query(News).filter(News.is_private != True)
+    visits_count = int(request.cookies.get("visits_count", 0))
+    if visits_count:
+        res = make_response(render_template("index.html", news=news))
+        res.set_cookie("visits_count", '1', max_age=60 * 60 * 24 * 365 * 2)
+    else:
+        res = make_response("Вы пришли на эту страницу в первый раз за последние 2 года")
+        res.set_cookie("visits_count", '1',max_age=60 * 60 * 24 * 365 * 2)
+    
+    return res
+
+@app.route("/session_test")
+def session_test():
+    visits_count = session.get('visits_count', 0)
+    session['visits_count'] = visits_count + 1
+    return make_response(f"Вы пришли на эту страницу {visits_count + 1} раз")
+
 @app.route('/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
@@ -85,65 +105,6 @@ def login():
             return render_template('login.html', error=error)
 
     return render_template('login.html', form=form)
-    
-# @app.route('/news', methods=['GET', 'POST'])
-# @login_required
-# def add_news():
-#     form = NewsForm()
-#     if form.validate_on_submit():
-#         db_sess = db_session.create_session()
-#         news = News()
-
-#         news.title = form.title.data
-#         news.content = form.content.data
-#         news.is_private = form.is_private.data
-#         current_user.news.append(news)
-
-#         db_sess.merge(current_user)
-#         db_sess.commit()
-        
-#         return redirect('/')
-#     return render_template('news.html', title='Добавление новости',form=form)
-
-
-# @app.route('/news/<int:id>', methods=['GET', 'POST'])
-# @login_required
-# def edit_news(id):
-#     form = NewsForm()
-#     if request.method == "GET":
-#         db_sess = db_session.create_session()
-#         news = db_sess.query(News).filter(News.id == id,News.user == current_user).first()
-        
-#         if news:
-#             form.title.data = news.title
-#             form.content.data = news.content
-#             form.is_private.data = news.is_private
-#         else:
-#             abort(404)
-#     if form.validate_on_submit():
-#         db_sess = db_session.create_session()
-#         news = db_sess.query(News).filter(News.id == id, News.user == current_user).first()
-#         if news:
-#             news.title = form.title.data
-#             news.content = form.content.data
-#             news.is_private = form.is_private.data
-#             db_sess.commit()
-#             return redirect('/')
-#         else:
-#             abort(404)
-#     return render_template('news.html', title='Редактирование новости', form=form)
-
-# @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
-# @login_required
-# def news_delete(id):
-#     db_sess = db_session.create_session()
-#     news = db_sess.query(News).filter(News.id == id,News.user == current_user).first()
-#     if news:
-#         db_sess.delete(news)
-#         db_sess.commit()
-#     else:
-#         abort(404)
-#     return redirect('/')
 
 @app.route('/news', methods=['GET', 'POST'])
 @login_required
@@ -202,26 +163,6 @@ def news_delete(id):
     else:
         abort(404)
     return redirect('/')
-
-@app.route("/cookie_test")
-def cookie_test():
-    db_sess = db_session.create_session()
-    news = db_sess.query(News).filter(News.is_private != True)
-    visits_count = int(request.cookies.get("visits_count", 0))
-    if visits_count:
-        res = make_response(render_template("index.html", news=news))
-        res.set_cookie("visits_count", '1', max_age=60 * 60 * 24 * 365 * 2)
-    else:
-        res = make_response("Вы пришли на эту страницу в первый раз за последние 2 года")
-        res.set_cookie("visits_count", '1',max_age=60 * 60 * 24 * 365 * 2)
-    
-    return res
-
-@app.route("/session_test")
-def session_test():
-    visits_count = session.get('visits_count', 0)
-    session['visits_count'] = visits_count + 1
-    return make_response(f"Вы пришли на эту страницу {visits_count + 1} раз")
 
 @app.route('/add_category', methods=['GET', 'POST'])
 @login_required
