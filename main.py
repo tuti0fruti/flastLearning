@@ -169,7 +169,7 @@ def add_category():
         category = Category(name=form.name.data)
         db_sess.add(category)
         db_sess.commit()
-        return redirect('/')
+        return redirect('/categories')
     return render_template('category.html', title='Добавление категории', form=form)
 
 @app.route('/edit_category/<int:id>', methods=['GET', 'POST'])
@@ -189,7 +189,7 @@ def edit_category(id):
         if category:
             category.name = form.name.data
             db_sess.commit()
-            return redirect('/')
+            return redirect('/categories')
         else:
             abort(404)
     return render_template('category.html', title='Редактирование категории', form=form)
@@ -204,7 +204,14 @@ def delete_category(id):
         db_sess.commit()
     else:
         abort(404)
-    return redirect('/')
+    return redirect('/categories')
+
+@app.route('/categories', methods=['GET'])
+@login_required
+def manage_categories():
+    db_sess = db_session.create_session()
+    categories = db_sess.query(Category).all()
+    return render_template('categories.html', title='Управление категориями', categories=categories)
 
 if __name__ == '__main__':
     app.run(port=700, host='127.0.0.1')
