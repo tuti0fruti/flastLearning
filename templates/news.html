@@ -1,41 +1,28 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1>Добавление новости</h1>
-<form action="" method="post">
-    {{ form.hidden_tag() }}
-    <p>
-        {{ form.title.label }}<br>
-        {{ form.title(class="form-control") }}<br>
-        {% for error in form.title.errors %}
-    <p class="alert alert-danger" role="alert">
-        {{ error }}
-    </p>
-        {% endfor %}
-    </p>
-    <p>
-        {{ form.content.label }}<br>
-        {{ form.content(class="form-control") }}<br>
-        {% for error in form.content.errors %}
-    <p class="alert alert-danger" role="alert">
-        {{ error }}
-    </p>
-        {% endfor %}
-    </p>
-    <p>
-        {{ form.is_private() }} {{ form.is_private.label }}
-    </p>
-    <p>
-        {{ form.categories.label }}<br>
-        {{ form.categories(class="form-control") }}<br>
-        {% for error in form.categories.errors %}
-    <p class="alert alert-danger" role="alert">
-        {{ error }}
-    </p>
-        {% endfor %}
-    </p>
-    <p>
-        {{ form.submit(type="submit", class="btn btn-primary") }}
-    </p>
-    {{ message }}
-</form>
+<div class="container">
+    <h1 class="mb-4">{{ title }}</h1>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.content.label(class="form-label") }}
+            {{ form.content(class="form-control", rows=4) }}
+        </div>
+        <div class="form-group form-check">
+            {{ form.is_private(class="form-check-input") }}
+            {{ form.is_private.label(class="form-check-label") }}
+        </div>
+        <div class="form-group">
+            {{ form.categories.label(class="form-label") }}
+            {{ form.categories(class="form-control", multiple=True) }} 
+            <small class="form-text text-muted">Нажмите и удерживайте клавишу Ctrl (Windows) или Command (Mac), чтобы выбрать несколько категорий.</small>
+        </div>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
 {% endblock %}
