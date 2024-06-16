@@ -1,14 +1,14 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, BooleanField, SubmitField, SelectMultipleField
 from wtforms.validators import DataRequired
-from data.category import Category
 from data import db_session
+from data.category import Category
 
 class NewsForm(FlaskForm):
     title = StringField('Заголовок', validators=[DataRequired()])
     content = TextAreaField('Содержание', validators=[DataRequired()])
     is_private = BooleanField('Личное')
-    categories = SelectMultipleField('Категории', coerce=int)
+    categories = SelectMultipleField('Категории', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Применить')
 
     def __init__(self, *args, **kwargs):
