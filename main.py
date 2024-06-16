@@ -1,4 +1,4 @@
-from flask import Flask, abort, make_response, redirect, render_template, request, session, url_for
+from flask import Flask, abort, make_response, redirect, render_template, request, session, url_for, flash
 from data import db_session
 from data.category import Category
 from data.users import User
@@ -48,7 +48,7 @@ def cookie_test():
         res.set_cookie("visits_count", '1', max_age=60 * 60 * 24 * 365 * 2)
     else:
         res = make_response("Вы пришли на эту страницу в первый раз за последние 2 года")
-        res.set_cookie("visits_count", '1', max_age=60 * 60 * 24 * 365 * 2)
+        res.set_cookie("visits_count", '1',max_age=60 * 60 * 24 * 365 * 2)
     
     return res
 
@@ -63,7 +63,7 @@ def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
-            return render_template('register.html', title='Регистрация', form=form, message="Пароли не совпадают")
+            return render_template('register.html', title='Регистрация',form=form,message="Пароли не совпадают")
         db_sess = db_session.create_session()
        
         user = db_sess.query(User).filter(User.email == form.email.data).first()
@@ -72,9 +72,9 @@ def reqister():
             return render_template('register.html', title='Регистрация', form=form, message="Такой пользователь уже есть")
         
         user = User(
-            name=form.name.data,
-            email=form.email.data,
-            about=form.about.data
+        name=form.name.data,
+        email=form.email.data,
+        about=form.about.data
         )
 
         user.set_password(form.password.data)
@@ -112,9 +112,9 @@ def add_news():
             title=form.title.data,
             content=form.content.data,
             is_private=form.is_private.data,
-            user_id=current_user.id
+            user_id=current_user.id,
+            categories=[db_sess.query(Category).get(id) for id in form.categories.data]
         )
-        news.categories = [db_sess.query(Category).get(id) for id in form.categories.data]
         db_sess.add(news)
         db_sess.commit()
         return redirect('/')
@@ -148,7 +148,6 @@ def edit_news(id):
             abort(404)
     return render_template('news.html', title='Редактирование новости', form=form)
 
-
 @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
 def news_delete(id):
@@ -172,6 +171,40 @@ def add_category():
         db_sess.commit()
         return redirect('/')
     return render_template('category.html', title='Добавление категории', form=form)
+
+@app.route('/edit_category/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_category(id):
+    form = CategoryForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        category = db_sess.query(Category).filter(Category.id == id).first()
+        if category:
+            form.name.data = category.name
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        category = db_sess.query(Category).filter(Category.id == id).first()
+        if category:
+            category.name = form.name.data
+            db_sess.commit()
+            return redirect('/')
+        else:
+            abort(404)
+    return render_template('category.html', title='Редактирование категории', form=form)
+
+@app.route('/delete_category/<int:id>', methods=['GET', 'POST'])
+@login_required
+def delete_category(id):
+    db_sess = db_session.create_session()
+    category = db_sess.query(Category).filter(Category.id == id).first()
+    if category:
+        db_sess.delete(category)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
 
 if __name__ == '__main__':
     app.run(port=700, host='127.0.0.1')
